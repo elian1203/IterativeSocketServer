@@ -1,6 +1,7 @@
 package edu.unf;
 
 import java.io.*;
+import java.net.Inet4Address;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
@@ -16,7 +17,9 @@ public class IterativeSocketServer {
 
 			ServerSocket serverSocket = new ServerSocket(port);
 
-			System.out.printf("Started socket server on %s:%d\n", serverSocket.getInetAddress(), port);
+			String localIpv4 = Inet4Address.getLocalHost().getHostAddress();
+
+			System.out.printf("Started socket server on %s:%d\n", localIpv4, port);
 			receiveConnections(serverSocket);
 		} catch (IOException e) {
 			System.out.println("Error initializing server socket! Something else may be running on this port or you " +
@@ -54,6 +57,7 @@ public class IterativeSocketServer {
 	private static void receiveConnections(ServerSocket serverSocket) throws IOException {
 		// loop to indefinitely accept clients until closed by SIGTERM or something else
 		while (true) {
+			System.out.println("Waiting for client");
 			// accept next client
 			Socket socket = serverSocket.accept();
 
