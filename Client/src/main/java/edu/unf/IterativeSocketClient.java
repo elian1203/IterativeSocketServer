@@ -1,7 +1,6 @@
 package edu.unf;
 
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
 
@@ -21,7 +20,7 @@ public class IterativeSocketClient {
 		}
 
 		System.out.println("Please enter the port to communicate on:");
-		String portInput =  scanner.nextLine();
+		String portInput = scanner.nextLine();
 
 		if (!isInt(portInput)) {
 			System.out.println("Invalid port specified!");
@@ -60,14 +59,46 @@ public class IterativeSocketClient {
 			return;
 		}
 
-		try {
-			Socket socket = new Socket(host, port);
+		System.out.println("How many times would you like to run this command on the server? (1-25)");
 
-			PrintWriter writer = new PrintWriter(socket.getOutputStream());
-			writer.write(command);
-		} catch (IOException e) {
-			System.out.println("Error connecting to host! Ensure you have entered the proper host and port numbers.");
+		String numberInput = scanner.nextLine();
+
+		if (!isInt(numberInput)) {
+			System.out.println("Invalid number of times to execute");
 			return;
+		}
+
+		int numberToExecute = Integer.parseInt(numberInput);
+
+		if (numberToExecute < 1 || numberToExecute > 25) {
+			System.out.println("Invalid number of times to execute! Selection must be between 1 and 25.");
+			return;
+		}
+
+		for (int i = 0; i < numberToExecute; i++) {
+			System.out.println("Connecting..");
+
+			try {
+				Socket socket = new Socket(host, port);
+				System.out.println("Socket opened");
+
+				// Use encoding of your choice
+				Writer out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+				out.append(command).append("\n").flush();
+
+				BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+				String socketRead;
+				while ((socketRead = reader.readLine()) != null) {
+					System.out.println(socketRead);
+				}
+
+				System.out.println("Connection closed.");
+			} catch (IOException e) {
+				System.out.println("Error connecting to host! " +
+						"Ensure you have entered the proper host and port numbers.");
+				return;
+			}
 		}
 	}
 

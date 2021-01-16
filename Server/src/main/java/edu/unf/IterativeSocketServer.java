@@ -24,6 +24,7 @@ public class IterativeSocketServer {
 		} catch (IOException e) {
 			System.out.println("Error initializing server socket! Something else may be running on this port or you " +
 					"may have insufficient privileges to listen on this port");
+			e.printStackTrace();
 			return;
 		}
 
@@ -60,13 +61,17 @@ public class IterativeSocketServer {
 			System.out.println("Waiting for client");
 			// accept next client
 			Socket socket = serverSocket.accept();
+			System.out.println("Got client");
 
 			// read their command
-			Scanner scanner = new Scanner(socket.getInputStream());
-			String inputCommand = scanner.next();
+
+			DataInputStream dataIn = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+			String inputCommand = dataIn.readLine();
+
+			System.out.println("Received command: " + inputCommand);
 
 			Runtime rt = Runtime.getRuntime();
-			Process proc = null;
+			Process proc;
 
 			// execute process based on inputted command
 			switch (inputCommand) {
@@ -96,14 +101,16 @@ public class IterativeSocketServer {
 
 			// prepare input reader from process and output stream from socket
 			BufferedReader stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-			PrintWriter writer = new PrintWriter(socket.getOutputStream());
+			Writer out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 
 			// each line that is outputted from the process will be sent back to the client
 			String procInput;
 			while ((procInput = stdInput.readLine()) != null) {
-				writer.write(procInput + "\n");
+				out.append(procInput + "\n");
 			}
 
+			stdInput.close();
+			out.flush();
 			socket.close();
 		}
 	}
