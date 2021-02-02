@@ -75,10 +75,13 @@ public class IterativeSocketClient {
 			return;
 		}
 
+		long totalTime = 0;
+
 		for (int i = 0; i < numberToExecute; i++) {
 			System.out.println("Connecting..");
 
 			try {
+				long startTime = System.currentTimeMillis();
 				Socket socket = new Socket(host, port);
 				System.out.println("Socket opened");
 
@@ -93,13 +96,19 @@ public class IterativeSocketClient {
 					System.out.println(socketRead);
 				}
 
-				System.out.println("Connection closed.");
+				long finalTime = System.currentTimeMillis() - startTime;
+				totalTime += finalTime;
+
+				System.out.println("Connection closed. Turn-around time: " + finalTime + "ms.");
 			} catch (IOException e) {
 				System.out.println("Error connecting to host! " +
 						"Ensure you have entered the proper host and port numbers.");
 				return;
 			}
 		}
+
+		System.out.println("Total turn-around time: " + totalTime + "ms.");
+		System.out.println("Average turn-around time: " + totalTime / numberToExecute + "ms.");
 	}
 
 	private static boolean isInt(String input) {
