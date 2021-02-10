@@ -12,13 +12,6 @@ public class IterativeSocketClient {
 		System.out.println("Please enter the server IP address:");
 		String host = scanner.nextLine();
 
-		// regex found online, matches any ipv4 address
-		// if found to cause issues during the testing stage I will just remove this portion
-		if (!host.matches("^([0-9]{1,3}\\.){3}[0-9]{1,3}?$")) {
-			System.out.println("Invalid IP address specified!");
-			return;
-		}
-
 		System.out.println("Please enter the port to communicate on:");
 		String portInput = scanner.nextLine();
 
