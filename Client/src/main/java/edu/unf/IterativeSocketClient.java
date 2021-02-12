@@ -82,9 +82,7 @@ public class IterativeSocketClient {
 
 		// atomic to allow modification within thread
 		AtomicBoolean error = new AtomicBoolean(false);
-
-		// log start time before creating threads
-		long totalStartTime = System.currentTimeMillis();
+		AtomicLong totalTime = new AtomicLong(0);
 
 		// for loop to create each thread
 		for (int i = 0; i < numberToExecute; i++) {
@@ -122,6 +120,9 @@ public class IterativeSocketClient {
 					// calculate the final time or turn-around time
 					long threadFinalTime = System.currentTimeMillis() - threadStartTime;
 
+					// add to total turn-around time
+					totalTime.addAndGet(threadFinalTime);
+
 					System.out.println("Thread " + finalI + ": Connection closed. Turn-around time: " + threadFinalTime + "ms.");
 				} catch (IOException e) {
 					// only do this if there hasn't already been an error determined
@@ -143,11 +144,8 @@ public class IterativeSocketClient {
 		for (Thread thread : threads)
 			thread.join();
 
-		// total time = current time - start time
-		long totalFinalTime = System.currentTimeMillis() - totalStartTime;
-
-		System.out.println("Total turn-around time: " + totalFinalTime + "ms.");
-		System.out.println("Average turn-around time: " + totalFinalTime / numberToExecute + "ms.");
+		System.out.println("Total turn-around time: " + totalTime + "ms.");
+		System.out.println("Average turn-around time: " + totalTime.get() / numberToExecute + "ms.");
 	}
 
 	private static boolean isInt(String input) {
