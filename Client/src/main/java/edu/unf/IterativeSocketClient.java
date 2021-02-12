@@ -2,11 +2,16 @@ package edu.unf;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class IterativeSocketClient {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws InterruptedException {
+		// load inputs from stdin
 		Scanner scanner = new Scanner(System.in);
 
 		System.out.println("Please enter the server IP address:");
@@ -32,6 +37,8 @@ public class IterativeSocketClient {
 			return;
 		}
 
+		// parse selection to string
+
 		int selection = Integer.parseInt(selectionInput);
 		String command;
 
@@ -52,6 +59,8 @@ public class IterativeSocketClient {
 			return;
 		}
 
+		// load more inputs from stdin/user
+
 		System.out.println("How many times would you like to run this command on the server? (1-25)");
 
 		String numberInput = scanner.nextLine();
@@ -68,40 +77,77 @@ public class IterativeSocketClient {
 			return;
 		}
 
-		long totalTime = 0;
+		// thread array to store each created process
+		List<Thread> threads = new ArrayList<>();
 
+		// atomic to allow modification within thread
+		AtomicBoolean error = new AtomicBoolean(false);
+
+		// log start time before creating threads
+		long totalStartTime = System.currentTimeMillis();
+
+		// for loop to create each thread
 		for (int i = 0; i < numberToExecute; i++) {
-			System.out.println("Connecting..");
+			// if there was an error in the last process, we will no longer try to create more
+			if (error.get())
+				break;
 
-			try {
-				long startTime = System.currentTimeMillis();
-				Socket socket = new Socket(host, port);
-				System.out.println("Socket opened");
+			// final increment to display thread number to stdout
+			final int finalI = i + 1;
 
-				// Use encoding of your choice
-				Writer out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-				out.append(command).append("\n").flush();
+			Thread t = new Thread(() -> {
+				System.out.println("Thread " + finalI + ": Connecting..");
 
-				BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+				try {
+					// log start time
+					long threadStartTime = System.currentTimeMillis();
 
-				String socketRead;
-				while ((socketRead = reader.readLine()) != null) {
-					System.out.println(socketRead);
+					// open socket
+					Socket socket = new Socket(host, port);
+					System.out.println("Thread " + finalI + ": Socket opened");
+
+					// write command to server
+					Writer out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+					out.append(command).append("\n").flush();
+
+					// read server output
+					BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+					String socketRead;
+					while ((socketRead = reader.readLine()) != null) {
+						// print line by line to stdout
+						System.out.println(socketRead);
+					}
+
+					// calculate the final time or turn-around time
+					long threadFinalTime = System.currentTimeMillis() - threadStartTime;
+
+					System.out.println("Thread " + finalI + ": Connection closed. Turn-around time: " + threadFinalTime + "ms.");
+				} catch (IOException e) {
+					// only do this if there hasn't already been an error determined
+					if (!error.get()) {
+						System.out.println("Error connecting to host! " +
+								"Ensure you have entered the proper host and port numbers.");
+						// if there was an error, set the atomicboolean to true to cease execution
+						error.set(true);
+					}
 				}
+			});
 
-				long finalTime = System.currentTimeMillis() - startTime;
-				totalTime += finalTime;
-
-				System.out.println("Connection closed. Turn-around time: " + finalTime + "ms.");
-			} catch (IOException e) {
-				System.out.println("Error connecting to host! " +
-						"Ensure you have entered the proper host and port numbers.");
-				return;
-			}
+			// start thread and add it to list
+			t.start();
+			threads.add(t);
 		}
 
-		System.out.println("Total turn-around time: " + totalTime + "ms.");
-		System.out.println("Average turn-around time: " + totalTime / numberToExecute + "ms.");
+		// await for every thread to finish for calculating total time
+		for (Thread thread : threads)
+			thread.join();
+
+		// total time = current time - start time
+		long totalFinalTime = System.currentTimeMillis() - totalStartTime;
+
+		System.out.println("Total turn-around time: " + totalFinalTime + "ms.");
+		System.out.println("Average turn-around time: " + totalFinalTime / numberToExecute + "ms.");
 	}
 
 	private static boolean isInt(String input) {

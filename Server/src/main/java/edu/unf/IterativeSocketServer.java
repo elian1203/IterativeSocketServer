@@ -10,16 +10,21 @@ public class IterativeSocketServer {
 
 	public static void main(String[] args) {
 		try {
+			// request port from stdin / user
 			int port = requestPort();
 
+			// if port is -1, the user specified an invalid port
 			if (port == -1)
 				return;
 
+			// open server socket
 			ServerSocket serverSocket = new ServerSocket(port);
 
+			// get local ip address from socket
 			String localIpv4 = Inet4Address.getLocalHost().getHostAddress();
-
 			System.out.printf("Started socket server on %s:%d\n", localIpv4, port);
+
+			// begin receiving connections
 			receiveConnections(serverSocket);
 		} catch (IOException e) {
 			System.out.println("Error initializing server socket! Something else may be running on this port or you " +
@@ -70,6 +75,7 @@ public class IterativeSocketServer {
 
 			System.out.println("Received command: " + inputCommand);
 
+			// initial runtime and process for executing shell command
 			Runtime rt = Runtime.getRuntime();
 			Process proc;
 
@@ -109,6 +115,7 @@ public class IterativeSocketServer {
 				out.append(procInput + "\n");
 			}
 
+			// clean up streams and socket before accepting next client
 			stdInput.close();
 			out.flush();
 			socket.close();
