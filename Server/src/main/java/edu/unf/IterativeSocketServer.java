@@ -30,7 +30,6 @@ public class IterativeSocketServer {
 			System.out.println("Error initializing server socket! Something else may be running on this port or you " +
 					"may have insufficient privileges to listen on this port");
 			e.printStackTrace();
-			return;
 		}
 
 	}
@@ -43,7 +42,7 @@ public class IterativeSocketServer {
 		scanner.close();
 
 		// a port must be an integer
-		if (!isInt(input)) {
+		if (notInt(input)) {
 			System.out.println("Invalid port specified!");
 			return -1;
 		}
@@ -71,39 +70,41 @@ public class IterativeSocketServer {
 			// read their command
 
 			DataInputStream dataIn = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
-			String inputCommand = dataIn.readLine();
+			int inputSelection = dataIn.readInt();
 
-			System.out.println("Received command: " + inputCommand);
-
-			// initial runtime and process for executing shell command
 			Runtime rt = Runtime.getRuntime();
 			Process proc;
 
+			String commandName;
+
 			// execute process based on inputted command
-			switch (inputCommand) {
-				case "date":
-					proc = rt.exec("date");
-					break;
-				case "uptime":
-					proc = rt.exec("uptime");
-					break;
-				case "memory":
-					proc = rt.exec("free");
-					break;
-				case "netstat":
-					proc = rt.exec("netstat");
-					break;
-				case "users":
-					proc = rt.exec("users");
-					break;
-				case "proc":
-					proc = rt.exec("ps aux");
-					break;
-				default: // this should never execute unless the socket is breached by a foreign client
-					System.out.println("Unknown command specified: " + inputCommand);
-					socket.close();
-					return;
+			if (inputSelection == 1) {
+				commandName = "date";
+				proc = rt.exec(commandName);
+			} else if (inputSelection == 2) {
+				commandName = "uptime";
+				proc = rt.exec(commandName);
+			} else if (inputSelection == 3) {
+				commandName = "memory";
+				proc = rt.exec("free");
+			} else if (inputSelection == 4) {
+				commandName = "netstat";
+				proc = rt.exec(commandName);
+			} else if (inputSelection == 5) {
+				commandName = "users";
+				proc = rt.exec(commandName);
+			} else if (inputSelection == 6) {
+				commandName = "processes";
+				proc = rt.exec("ps aux");
+			} else { // this should never execute unless the socket is breached by a foreign client
+				System.out.println("Unknown command specified: " + inputSelection);
+				socket.close();
+				return;
 			}
+
+			System.out.println("Received command: " + commandName);
+
+			// initial runtime and process for executing shell command
 
 			// prepare input reader from process and output stream from socket
 			BufferedReader stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
@@ -112,7 +113,7 @@ public class IterativeSocketServer {
 			// each line that is outputted from the process will be sent back to the client
 			String procInput;
 			while ((procInput = stdInput.readLine()) != null) {
-				out.append(procInput + "\n");
+				out.append(procInput).append("\n");
 			}
 
 			// clean up streams and socket before accepting next client
@@ -122,12 +123,12 @@ public class IterativeSocketServer {
 		}
 	}
 
-	private static boolean isInt(String input) {
+	private static boolean notInt(String input) {
 		try {
 			Integer.parseInt(input);
-			return true;
-		} catch (NumberFormatException e) {
 			return false;
+		} catch (NumberFormatException e) {
+			return true;
 		}
 	}
 }

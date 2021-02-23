@@ -20,7 +20,7 @@ public class IterativeSocketClient {
 		System.out.println("Please enter the port to communicate on:");
 		String portInput = scanner.nextLine();
 
-		if (!isInt(portInput)) {
+		if (notInt(portInput)) {
 			System.out.println("Invalid port specified!");
 			return;
 		}
@@ -32,7 +32,7 @@ public class IterativeSocketClient {
 
 		String selectionInput = scanner.nextLine();
 
-		if (!isInt(selectionInput)) {
+		if (notInt(selectionInput)) {
 			System.out.println("Invalid selection!");
 			return;
 		}
@@ -40,21 +40,8 @@ public class IterativeSocketClient {
 		// parse selection to string
 
 		int selection = Integer.parseInt(selectionInput);
-		String command;
 
-		if (selection == 1)
-			command = "date";
-		else if (selection == 2)
-			command = "uptime";
-		else if (selection == 3)
-			command = "memory";
-		else if (selection == 4)
-			command = "netstat";
-		else if (selection == 5)
-			command = "users";
-		else if (selection == 6)
-			command = "proc";
-		else {
+		if (selection < 1 || selection > 6) {
 			System.out.println("Invalid selection!");
 			return;
 		}
@@ -65,7 +52,7 @@ public class IterativeSocketClient {
 
 		String numberInput = scanner.nextLine();
 
-		if (!isInt(numberInput)) {
+		if (notInt(numberInput)) {
 			System.out.println("Invalid number of times to execute");
 			return;
 		}
@@ -105,8 +92,8 @@ public class IterativeSocketClient {
 					System.out.println("Thread " + finalI + ": Socket opened");
 
 					// write command to server
-					Writer out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-					out.append(command).append("\n").flush();
+					DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+					out.writeInt(selection);
 
 					// read server output
 					BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -129,7 +116,7 @@ public class IterativeSocketClient {
 					if (!error.get()) {
 						System.out.println("Error connecting to host! " +
 								"Ensure you have entered the proper host and port numbers.");
-						// if there was an error, set the atomicboolean to true to cease execution
+						// if there was an error, set the atomic boolean to true to cease execution
 						error.set(true);
 					}
 				}
@@ -148,12 +135,12 @@ public class IterativeSocketClient {
 		System.out.println("Average turn-around time: " + totalTime.get() / numberToExecute + "ms.");
 	}
 
-	private static boolean isInt(String input) {
+	private static boolean notInt(String input) {
 		try {
 			Integer.parseInt(input);
-			return true;
-		} catch (NumberFormatException e) {
 			return false;
+		} catch (NumberFormatException e) {
+			return true;
 		}
 	}
 }
