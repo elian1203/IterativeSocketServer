@@ -8,7 +8,7 @@ import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class IterativeSocketClient {
+public class SocketClient {
 
 	public static void main(String[] args) throws InterruptedException {
 		// load inputs from stdin

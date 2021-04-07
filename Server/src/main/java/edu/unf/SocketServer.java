@@ -6,7 +6,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
 
-public class IterativeSocketServer {
+public class SocketServer {
 
 	public static void main(String[] args) {
 		try {
