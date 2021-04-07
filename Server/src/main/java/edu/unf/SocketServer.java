@@ -64,62 +64,68 @@ public class SocketServer {
 		while (true) {
 			System.out.println("Waiting for client");
 			// accept next client
-			Socket socket = serverSocket.accept();
+			final Socket socket = serverSocket.accept();
 			System.out.println("Got client");
 
-			// read their command
+			new Thread(() -> {
+				// read their command
+				try {
+					DataInputStream dataIn = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+					int inputSelection = dataIn.readInt();
 
-			DataInputStream dataIn = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
-			int inputSelection = dataIn.readInt();
+					Runtime rt = Runtime.getRuntime();
+					Process proc;
 
-			Runtime rt = Runtime.getRuntime();
-			Process proc;
+					String commandName;
 
-			String commandName;
+					// execute process based on inputted command
+					if (inputSelection == 1) {
+						commandName = "date";
+						proc = rt.exec(commandName);
+					} else if (inputSelection == 2) {
+						commandName = "uptime";
+						proc = rt.exec(commandName);
+					} else if (inputSelection == 3) {
+						commandName = "memory";
+						proc = rt.exec("free");
+					} else if (inputSelection == 4) {
+						commandName = "netstat";
+						proc = rt.exec(commandName);
+					} else if (inputSelection == 5) {
+						commandName = "users";
+						proc = rt.exec(commandName);
+					} else if (inputSelection == 6) {
+						commandName = "processes";
+						proc = rt.exec("ps aux");
+					} else { // this should never execute unless the socket is breached by a foreign client
+						System.out.println("Unknown command specified: " + inputSelection);
+						socket.close();
+						return;
+					}
 
-			// execute process based on inputted command
-			if (inputSelection == 1) {
-				commandName = "date";
-				proc = rt.exec(commandName);
-			} else if (inputSelection == 2) {
-				commandName = "uptime";
-				proc = rt.exec(commandName);
-			} else if (inputSelection == 3) {
-				commandName = "memory";
-				proc = rt.exec("free");
-			} else if (inputSelection == 4) {
-				commandName = "netstat";
-				proc = rt.exec(commandName);
-			} else if (inputSelection == 5) {
-				commandName = "users";
-				proc = rt.exec(commandName);
-			} else if (inputSelection == 6) {
-				commandName = "processes";
-				proc = rt.exec("ps aux");
-			} else { // this should never execute unless the socket is breached by a foreign client
-				System.out.println("Unknown command specified: " + inputSelection);
-				socket.close();
-				return;
-			}
+					System.out.println("Received command: " + commandName);
 
-			System.out.println("Received command: " + commandName);
+					// initial runtime and process for executing shell command
 
-			// initial runtime and process for executing shell command
+					// prepare input reader from process and output stream from socket
+					BufferedReader stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+					Writer out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 
-			// prepare input reader from process and output stream from socket
-			BufferedReader stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-			Writer out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+					// each line that is outputted from the process will be sent back to the client
+					String procInput;
+					while ((procInput = stdInput.readLine()) != null) {
+						out.append(procInput).append("\n");
+					}
 
-			// each line that is outputted from the process will be sent back to the client
-			String procInput;
-			while ((procInput = stdInput.readLine()) != null) {
-				out.append(procInput).append("\n");
-			}
+					// clean up streams and socket before accepting next client
+					stdInput.close();
+					out.flush();
+					socket.close();
 
-			// clean up streams and socket before accepting next client
-			stdInput.close();
-			out.flush();
-			socket.close();
+				} catch (IOException e) {
+					System.out.println("Error handling client!");
+				}
+			}).start();
 		}
 	}
 
