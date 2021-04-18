@@ -48,7 +48,7 @@ public class SocketClient {
 
 		// load more inputs from stdin/user
 
-		System.out.println("How many times would you like to run this command on the server? (1-25)");
+		System.out.println("How many times would you like to run this command on the server? (1-100)");
 
 		String numberInput = scanner.nextLine();
 
@@ -59,8 +59,8 @@ public class SocketClient {
 
 		int numberToExecute = Integer.parseInt(numberInput);
 
-		if (numberToExecute < 1 || numberToExecute > 25) {
-			System.out.println("Invalid number of times to execute! Selection must be between 1 and 25.");
+		if (numberToExecute < 1 || numberToExecute > 100) {
+			System.out.println("Invalid number of times to execute! Selection must be between 1 and 100.");
 			return;
 		}
 
